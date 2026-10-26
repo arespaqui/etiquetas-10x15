@@ -1,0 +1,48 @@
+# Pruebas automáticas del repo público "Etiquetas 10x15".
+#
+# El repositorio ES el contenido de publico-10x15: las pruebas viven en tests/
+# en la raíz, así que no hace falta ningún working-directory.
+#
+# Se corre en Windows porque la app y los lanzadores .bat son de Windows; el
+# motor igual es Python puro y podría correr en otros sistemas.
+name: Pruebas
+
+# Se escribe "on" entre comillas para que cualquier parser YAML lo lea como la
+# clave "on" y no como el booleano true. GitHub acepta las dos formas.
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    name: unittest en Windows con Python 3.12
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Traer el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar las dependencias fijadas
+        # Las mismas versiones que requirements.txt: si cambian acá, cambian allá.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pymupdf==2.0 pillow==12.2.0
+
+      - name: Mostrar el entorno
+        run: |
+          python --version
+          python -m pip list
+
+      - name: Correr las pruebas
+        # Biblioteca estándar: sin pytest ni dependencias nuevas (S4).
+        run: python -m unittest discover -s tests -t . -v

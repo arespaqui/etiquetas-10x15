@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="236" viewBox="0 0 800 236" role="img" aria-labelledby="titulo-diagrama">
+  <title id="titulo-diagrama">Proceso: del PDF de origen a una etiqueta de 100 x 150 mm</title>
+
+  <defs>
+    <marker id="punta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8c959f"/>
+    </marker>
+    <marker id="punta-verde" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0a7d32"/>
+    </marker>
+    <marker id="punta-verde-inicio" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M10,0 L0,5 L10,10 z" fill="#0a7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Fondo explícito: el diagrama se lee igual en tema claro y en tema oscuro -->
+  <rect x="0.5" y="0.5" width="799" height="235" rx="12" fill="#ffffff" stroke="#d0d7de"/>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="400" y="32" text-anchor="middle" font-size="17" font-weight="600" fill="#1f2328">Del PDF de origen a una etiqueta de 100 × 150 mm</text>
+    <text x="400" y="52" text-anchor="middle" font-size="12" fill="#57606a">La app mide el rótulo, saca el aire de sobra y escala sin deformar</text>
+  </g>
+
+  <!-- ============ Paso 1: PDF de origen ============ -->
+  <rect x="18" y="68" width="132" height="112" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <g>
+    <rect x="70" y="80" width="28" height="40" rx="2" fill="#ffffff" stroke="#8c959f" stroke-width="1.5"/>
+    <line x1="76" y1="90" x2="92" y2="90" stroke="#c2c9d0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="76" y1="98" x2="92" y2="98" stroke="#c2c9d0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="76" y1="106" x2="86" y2="106" stroke="#c2c9d0" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <circle cx="34" cy="82" r="10" fill="#ffffff" stroke="#0a7d32" stroke-width="1.5"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="34" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0a7d32">1</text>
+    <text x="84" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2328">PDF de origen</text>
+    <text x="84" y="155" text-anchor="middle" font-size="10.5" fill="#57606a">A4, oficio o lo que</text>
+    <text x="84" y="169" text-anchor="middle" font-size="10.5" fill="#57606a">venga; varias páginas</text>
+  </g>
+  <line x1="156" y1="124" x2="171" y2="124" stroke="#8c959f" stroke-width="2" marker-end="url(#punta)"/>
+
+  <!-- ============ Paso 2: detectar el marco ============ -->
+  <rect x="176" y="68" width="132" height="112" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <g>
+    <rect x="226" y="80" width="32" height="40" rx="2" fill="#ffffff" stroke="#c2c9d0" stroke-width="1.5"/>
+    <rect x="232" y="86" width="20" height="28" fill="none" stroke="#0a7d32" stroke-width="1.8" stroke-dasharray="4 3"/>
+    <line x1="236" y1="90" x2="248" y2="90" stroke="#c2c9d0" stroke-width="2" stroke-linecap="round"/>
+    <line x1="236" y1="96" x2="248" y2="96" stroke="#c2c9d0" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <circle cx="192" cy="82" r="10" fill="#ffffff" stroke="#0a7d32" stroke-width="1.5"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="192" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0a7d32">2</text>
+    <text x="242" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2328">Detectar el marco</text>
+    <text x="242" y="155" text-anchor="middle" font-size="10.5" fill="#57606a">el rectángulo del</text>
+    <text x="242" y="169" text-anchor="middle" font-size="10.5" fill="#57606a">rótulo, por geometría</text>
+  </g>
+  <line x1="314" y1="124" x2="329" y2="124" stroke="#8c959f" stroke-width="2" marker-end="url(#punta)"/>
+
+  <!-- ============ Paso 3: recortar el aire ============ -->
+  <rect x="334" y="68" width="132" height="112" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <g>
+    <rect x="386" y="80" width="28" height="40" rx="2" fill="#ffffff" stroke="#c2c9d0" stroke-width="1.5"/>
+    <rect x="390" y="84" width="20" height="22" fill="#e3e9f0"/>
+    <line x1="392" y1="90" x2="408" y2="90" stroke="#8c959f" stroke-width="2" stroke-linecap="round"/>
+    <line x1="392" y1="97" x2="408" y2="97" stroke="#8c959f" stroke-width="2" stroke-linecap="round"/>
+    <rect x="390" y="108" width="20" height="8" fill="#fde8e8"/>
+    <line x1="382" y1="106" x2="418" y2="106" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="4 3"/>
+  </g>
+  <circle cx="350" cy="82" r="10" fill="#ffffff" stroke="#0a7d32" stroke-width="1.5"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="350" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0a7d32">3</text>
+    <text x="400" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2328">Recortar el aire</text>
+    <text x="400" y="155" text-anchor="middle" font-size="10.5" fill="#57606a">saca el blanco del</text>
+    <text x="400" y="169" text-anchor="middle" font-size="10.5" fill="#57606a">final; deja 2 mm</text>
+  </g>
+  <line x1="472" y1="124" x2="487" y2="124" stroke="#8c959f" stroke-width="2" marker-end="url(#punta)"/>
+
+  <!-- ============ Paso 4: escalar uniforme ============ -->
+  <rect x="492" y="68" width="132" height="112" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <g>
+    <line x1="546" y1="92" x2="546" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="549.5" y1="92" x2="549.5" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="553" y1="92" x2="553" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="556.5" y1="92" x2="556.5" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="560" y1="92" x2="560" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="563.5" y1="92" x2="563.5" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="567" y1="92" x2="567" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="570" y1="92" x2="570" y2="108" stroke="#1f2328" stroke-width="1.6"/>
+    <line x1="540" y1="84" x2="576" y2="84" stroke="#0a7d32" stroke-width="1.6"
+          marker-start="url(#punta-verde-inicio)" marker-end="url(#punta-verde)"/>
+    <line x1="536" y1="88" x2="536" y2="114" stroke="#0a7d32" stroke-width="1.6"
+          marker-start="url(#punta-verde-inicio)" marker-end="url(#punta-verde)"/>
+  </g>
+  <circle cx="508" cy="82" r="10" fill="#ffffff" stroke="#0a7d32" stroke-width="1.5"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="508" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0a7d32">4</text>
+    <text x="558" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2328">Escalar</text>
+    <text x="558" y="155" text-anchor="middle" font-size="10.5" fill="#57606a">uniforme: el código</text>
+    <text x="558" y="169" text-anchor="middle" font-size="10.5" fill="#57606a">no se deforma</text>
+  </g>
+  <line x1="630" y1="124" x2="645" y2="124" stroke="#8c959f" stroke-width="2" marker-end="url(#punta)"/>
+
+  <!-- ============ Paso 5: etiqueta 100 x 150 mm ============ -->
+  <rect x="650" y="68" width="132" height="112" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <g>
+    <rect x="696" y="80" width="18" height="27" rx="2" fill="#ffffff" stroke="#0a7d32" stroke-width="1.8"/>
+    <line x1="699" y1="88" x2="711" y2="88" stroke="#c2c9d0" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="699" y1="93" x2="711" y2="93" stroke="#c2c9d0" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="699" y1="102" x2="699" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+    <line x1="701.5" y1="102" x2="701.5" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+    <line x1="704" y1="102" x2="704" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+    <line x1="706.5" y1="102" x2="706.5" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+    <line x1="709" y1="102" x2="709" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+    <line x1="711" y1="102" x2="711" y2="99" stroke="#1f2328" stroke-width="1.3"/>
+  </g>
+  <circle cx="666" cy="82" r="10" fill="#ffffff" stroke="#0a7d32" stroke-width="1.5"/>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="666" y="86" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0a7d32">5</text>
+    <text x="716" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2328">100 × 150 mm</text>
+    <text x="716" y="155" text-anchor="middle" font-size="10.5" fill="#57606a">exacto y centrado,</text>
+    <text x="716" y="169" text-anchor="middle" font-size="10.5" fill="#57606a">listo para imprimir</text>
+  </g>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="400" y="210" text-anchor="middle" font-size="11.5" fill="#57606a">La escala es siempre la misma en ancho y en alto: un código de barras deformado puede no escanear.</text>
+  </g>
+</svg>

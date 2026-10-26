@@ -1,0 +1,11 @@
+# Configuración del selector de issues.
+# Deja el issue en blanco disponible para preguntas y propuestas que no sean un
+# problema reproducible, pero primero ofrece la documentación.
+blank_issues_enabled: true
+contact_links:
+  - name: Guía de uso, instalación y solución de problemas
+    url: https://github.com/arespaqui/etiquetas-10x15#readme
+    about: Antes de abrir un issue, mirá el README. Si la etiqueta sale corrida, casi siempre es la escala de impresión.
+  - name: Reglas para contribuir
+    url: https://github.com/arespaqui/etiquetas-10x15
+    about: El archivo CONTRIBUTING.md del repositorio explica cómo correr las pruebas y qué no se puede subir (PDFs reales ni datos personales).

@@ -1,0 +1,66 @@
+name: Reportar un problema
+description: Contanos qué PDF fallaba, qué esperabas y qué pasó.
+title: "[Problema] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de reportar.
+
+        **No adjuntes etiquetas reales.** Un rótulo real tiene nombre, dirección,
+        teléfono y número de seguimiento de una persona. Antes de subir cualquier
+        cosa, tapá o reemplazá esos datos, y si podés, contá el problema con un
+        PDF armado por vos (por ejemplo, una hoja A4 con un marco y texto de
+        mentira). Los datos personales se borran del issue.
+
+  - type: input
+    id: version
+    attributes:
+      label: Versión que usaste
+      description: ¿El ejecutable de Releases, o el código fuente? Si es el ejecutable, ¿qué versión?
+      placeholder: "Ejemplo: ejecutable 1.0.0 / código fuente con Python 3.12"
+    validations:
+      required: true
+
+  - type: textarea
+    id: pdf
+    attributes:
+      label: Qué PDF fallaba
+      description: >
+        Describí el PDF de origen: tamaño de hoja (A4, oficio, otro), si tiene el
+        marco dibujado, si trae imágenes o sellos, cuántas páginas. **No adjuntes
+        el PDF** si tiene datos personales.
+      placeholder: "Ejemplo: A4 vertical, una página, trae el marco del rótulo y una imagen del logo al pie."
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Qué esperabas que pasara
+    validations:
+      required: true
+
+  - type: textarea
+    id: paso
+    attributes:
+      label: Qué pasó en realidad
+      description: >
+        Pegá el mensaje de la ventana, el renglón que empieza con `!` si apareció
+        alguno, o el texto de la consola si usaste el `.bat` alternativa.
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Contenido de errores.log (si existe)
+      description: >
+        Sólo si la app había fallado: `errores.log` se escribe junto al `.exe` o
+        junto a `app_etiquetas.pyw`. Revisalo antes de pegarlo y sacá cualquier
+        dato personal o ruta con tu nombre de usuario.
+      render: text
+    validations:
+      required: false

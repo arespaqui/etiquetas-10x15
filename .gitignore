@@ -1,0 +1,33 @@
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+
+# Registros de errores de la app
+*.log
+
+# Carpeta que genera el hook local de validación (.atl/): nunca entra al repo público
+.atl/
+
+# PDFs: nunca se versionan (ni originales ni convertidos)
+*.pdf
+
+# Artefactos de empaquetado
+# empaquetar/construir.ps1 deja el ejecutable en dist/; el entorno virtual, el
+# workpath y el .spec se crean fuera del repo (en la carpeta temporal).
+dist/
+build/
+*.spec
+.pyinstaller/
+
+# ZIP del paquete listo para publicar: se sube como asset del Release, no va al repo
+Etiquetas-10x15-1.0.0-win64.zip
+
+# Entornos virtuales
+.venv/
+env/
+venv/
+
+# Basura del sistema
+.DS_Store
+Thumbs.db
+desktop.ini

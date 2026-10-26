@@ -1,0 +1,26 @@
+AVISO DE COMPONENTES DE TERCEROS / THIRD-PARTY NOTICE
+
+El paquete "Etiquetas 10x15" usa PyMuPDF (que incluye las bibliotecas MuPDF de
+Artifex Software), distribuidas bajo licencia GNU Affero General Public License
+version 3 (AGPL-3.0).
+
+This package uses PyMuPDF, which bundles MuPDF by Artifex Software, both
+distributed under the GNU Affero General Public License version 3 (AGPL-3.0).
+
+Componente / Component: PyMuPDF (incluye / bundles MuPDF)
+Autor / Author: Artifex Software, Inc. (https://artifex.com)
+Licencia / License: AGPL-3.0 (alternativa comercial disponible / commercial
+  license available from Artifex)
+Codigo fuente upstream / Upstream source code:
+  - PyMuPDF: https://github.com/pymupdf/PyMuPDF
+  - MuPDF:   https://github.com/ArtifexSoftware/mupdf
+Texto completo de la licencia / Full license text: ver ./LICENSE
+Documentacion de licencias de Artifex: https://artifex.com/licensing/
+
+La licencia AGPL-3.0 aplica a este paquete completo. Ver LICENSE.
+The AGPL-3.0 license applies to this package as a whole. See LICENSE.
+
+Pillow (Python Imaging Library, licencia MIT-CMU) tambien se usa como
+dependencia; su licencia es compatible y no impone obligaciones de copyleft
+sobre este paquete.
+Pillow (Python Imaging Library, MIT-CMU license) is also used as a dependency.
