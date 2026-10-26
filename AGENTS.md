@@ -36,6 +36,8 @@ máquina de nadie.
 │   ├── construir.ps1          Build reproducible del .exe (PyInstaller).
 │   └── README.md              Cómo se construye y por qué --onedir.
 ├── docs/imagenes/             Capturas y diagramas usados por el README.
+├── docs/manual.md             Manual de uso: cuándo usarlo, cuándo no, problemas.
+├── docs/marca/                Logo, tarjeta para redes y paleta de Ardamir.
 ├── .github/                   CI de pruebas y plantillas de issues.
 ├── README.md                  Documentación principal, para el usuario.
 ├── LEEME.md                   Guía corta del usuario final.
@@ -150,8 +152,9 @@ Y estas otras, sobre cómo se trabaja acá:
 
 ## Si algo no cierra
 
-- Dudas de uso o de comportamiento: `README.md` (secciones *Cómo funciona* y
-  *Solución de problemas*) y `LEEME.md`.
+- Dudas de uso o de comportamiento: [`docs/manual.md`](docs/manual.md) (el
+  manual completo, con cuándo usarla y cuándo no), `README.md` (secciones *Cómo
+  funciona* y *Solución de problemas*) y `LEEME.md`.
 - Dudas de proceso, pruebas o licencia: `CONTRIBUTING.md`.
 - Qué cambió y cuándo: `CHANGELOG.md`.
 - Cómo se arma el ejecutable y por qué con esas banderas: `empaquetar/README.md`.

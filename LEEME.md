@@ -3,8 +3,10 @@
 Convierte un PDF de rótulo (A4, oficio, lo que venga) en un PDF de **100 × 150 mm
 exactos**, listo para imprimir en una etiqueta térmica de 10 × 15 cm.
 
-Este archivo es lo indispensable. Todo lo demás —instalación desde el código
-fuente, cómo detecta el rótulo, preguntas frecuentes, licencia— está en el
+Este archivo es lo indispensable. Todo lo demás —cuándo usarla y cuándo no,
+cómo leer cada aviso, problemas frecuentes, licencia— está en el
+[manual completo](docs/manual.md). La instalación desde el código fuente, cómo
+detecta el rótulo y las preguntas frecuentes están en el
 [README del repositorio](https://github.com/arespaqui/etiquetas-10x15#readme).
 
 ## Uso

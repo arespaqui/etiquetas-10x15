@@ -1,4 +1,8 @@
+<img src="docs/marca/logo-transparente.png" width="120" alt="Ardamir">
+
 # Etiquetas 10x15
+
+Un recurso de **Ardamir**
 
 [![Licencia: AGPL-3.0](https://img.shields.io/badge/licencia-AGPL--3.0-blue.svg)](LICENSE)
 [![Pruebas](https://github.com/arespaqui/etiquetas-10x15/actions/workflows/tests.yml/badge.svg)](https://github.com/arespaqui/etiquetas-10x15/actions/workflows/tests.yml)
@@ -13,6 +17,7 @@ quiere pelear con el tamaño del papel: si sabés elegir un PDF y hacer doble cl
 ## Índice
 
 - [Qué hace](#qué-hace)
+- [Manual completo](docs/manual.md) ← **empezá acá si es tu primera vez**
 - [Instalación](#instalación)
   - [Opción 1: bajar el ejecutable (Windows)](#opción-1-bajar-el-ejecutable-windows)
   - [Opción 2: correr desde el código fuente](#opción-2-correr-desde-el-código-fuente)
@@ -114,6 +119,10 @@ Las dos dependencias están fijadas en [`requirements.txt`](requirements.txt):
 Después, doble clic en `1 - Abrir Etiquetas 10x15.bat` (o `python app_etiquetas.pyw`).
 
 ## Uso
+
+¿Es la primera vez que lo usás, o no sabés si tu caso es para esta herramienta?
+El **[manual completo](docs/manual.md)** lo explica de cero: cuándo usarla, cuándo
+no, cómo leer cada aviso y qué hacer si algo falla.
 
 1. Abrí la ventana: doble clic en **`1 - Abrir Etiquetas 10x15.bat`** (código fuente) o en
    **`Etiquetas 10x15.exe`** (versión descargada).
