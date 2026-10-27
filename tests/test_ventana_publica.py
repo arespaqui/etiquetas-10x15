@@ -236,6 +236,107 @@ class EstadoSinSoloColorTest(unittest.TestCase):
         self.assertEqual(self.app.AVISO_BARRA, self.app.COLOR_BARRA["aviso"])
 
 
+class TarjetaAgrupadaTest(unittest.TestCase):
+    """Muchas páginas que dicen lo mismo ocupan una línea por concepto.
+
+    Un PDF de 7 páginas iguales llenaba la tarjeta con 21 líneas: el mismo
+    resumen, el mismo aviso y el mismo recorte repetidos página por página. Lo
+    que cambia entre páginas es la página, no el concepto.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = cargar_app()
+
+    def siete_paginas_iguales(self):
+        return resultado(rows=[
+            fila(page=numero, frame_found=False, trimmed_mm=20.2,
+                 printed="96.9 x 150.0 mm", scale=112.7, margin_x=2.0)
+            for numero in range(1, 8)
+        ])
+
+    def test_siete_paginas_iguales_dan_tres_lineas(self):
+        _, lineas = self.app.card_lines(self.siete_paginas_iguales())
+
+        self.assertEqual(3, len(lineas), lineas)
+        textos = [linea["texto"] for linea in lineas]
+        self.assertEqual(
+            ["7 páginas · 96,9 × 150 mm · escala 112,7 % · 2 mm de blanco a cada lado",
+             "No encontré el marco del rótulo: usé el área con tinta, "
+             "que puede traer marcas sueltas de la hoja. Revisá el resultado.",
+             "Recorté 20,2 mm de aire al final para que el rótulo entre más grande."],
+            textos)
+        self.assertEqual([], [texto for texto in textos if "Página 1: " in texto],
+                         lineas)
+        self.assertEqual(
+            1, len([linea for linea in lineas if linea["estado"]]), lineas)
+        self.assertEqual(["resumen", "revisar", "info"],
+                         [linea["clase"] for linea in lineas])
+
+    def test_las_paginas_que_difieren_se_agrupan_con_rangos(self):
+        caso = resultado(rows=[
+            fila(page=1, mismatch=0.2, margin_x=12.0),
+            fila(page=2, mismatch=0.2, margin_x=12.0),
+            fila(page=3),
+            fila(page=4, frame_found=False, trimmed_mm=9.0),
+        ])
+
+        avisos = self.app.result_warning_lines(caso)
+        self.assertEqual(2, len(avisos), avisos)
+        self.assertTrue(avisos[0].startswith("Páginas 1-2: "), avisos[0])
+        self.assertTrue(avisos[1].startswith("Página 4: "), avisos[1])
+
+        infos = self.app.result_info_lines(caso)
+        self.assertEqual(1, len(infos), infos)
+        self.assertTrue(infos[0].startswith("Página 4: "), infos[0])
+
+    def test_los_milimetros_distintos_se_agrupan_por_valor(self):
+        caso = resultado(rows=[
+            fila(page=1, trimmed_mm=20.2),
+            fila(page=2, trimmed_mm=20.2),
+            fila(page=3, trimmed_mm=14.0),
+        ])
+
+        infos = self.app.result_info_lines(caso)
+        self.assertEqual(2, len(infos), infos)
+        self.assertTrue(infos[0].startswith("Páginas 1-2: "), infos[0])
+        self.assertIn("20,2 mm", infos[0])
+        self.assertTrue(infos[1].startswith("Página 3: "), infos[1])
+        self.assertIn("14 mm", infos[1])
+
+    def test_una_sola_pagina_conserva_el_texto_de_siempre(self):
+        caso = resultado(rows=[fila(frame_found=False, trimmed_mm=9.0)])
+
+        estado, lineas = self.app.card_lines(caso)
+        self.assertEqual("aviso", estado)
+        self.assertEqual(
+            ["100 × 150 mm · escala 100 %",
+             "No encontré el marco del rótulo: usé el área con tinta, "
+             "que puede traer marcas sueltas de la hoja. Revisá el resultado.",
+             "Recorté el aire que sobraba abajo para que el rótulo entre más grande."],
+            [linea["texto"] for linea in lineas])
+        self.assertTrue(lineas[0]["estado"], lineas)
+
+    def test_el_conteo_de_paginas_aparece_solo_con_mas_de_una(self):
+        _, una = self.app.card_lines(resultado(rows=[fila()]))
+        self.assertNotIn("página", una[0]["texto"].lower(), una[0]["texto"])
+
+        _, dos = self.app.card_lines(resultado(rows=[fila(page=1), fila(page=2)]))
+        self.assertEqual(1, len(dos), dos)
+        self.assertTrue(dos[0]["texto"].startswith("2 páginas · "), dos[0]["texto"])
+
+    def test_dos_paginas_que_difieren_en_el_resumen_usan_rangos(self):
+        _, lineas = self.app.card_lines(resultado(rows=[
+            fila(page=1, printed="96.9 x 150.0 mm", scale=112.7, margin_x=2.0),
+            fila(page=2),
+        ]))
+
+        resumenes = [linea["texto"] for linea in lineas if linea["clase"] == "resumen"]
+        self.assertEqual(2, len(resumenes), lineas)
+        self.assertTrue(resumenes[0].startswith("Página 1: "), resumenes[0])
+        self.assertTrue(resumenes[1].startswith("Página 2: "), resumenes[1])
+
+
 class PistaCondicionalTest(unittest.TestCase):
     """La pista de arrastre no promete un .bat que puede no existir."""
 

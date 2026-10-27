@@ -8,6 +8,16 @@ Todos los cambios que se notan desde afuera se anotan acá. El formato sigue
 
 Nada todavía.
 
+## [1.0.2] - 2026-10-27
+
+### Corregido
+- La tarjeta de resultado repetía cada frase una vez por página: un PDF de 7
+  páginas mostraba 21 líneas con el mismo texto. Ahora agrupa por concepto y
+  muestra el total al principio («7 páginas · 96,9 × 150 mm · …»), con rangos
+  («Páginas 2-3: …») cuando las páginas realmente difieren: 3 líneas en vez de 21.
+- La información del recorte indica cuántos milímetros se recortaron cuando el
+  archivo tiene más de una página.
+
 ## [1.0.1] - 2026-10-27
 
 Actualización recomendada: la 1.0.0 entrega la etiqueta más chica de lo que debe.

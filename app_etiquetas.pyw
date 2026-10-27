@@ -273,17 +273,30 @@ def hint_text():
     return PISTA_SELECCION
 
 
-def _avisos_de_fila(row, pagina, varias_paginas):
-    """Avisos de una página: sólo lo que pide revisar antes de imprimir."""
-    prefijo = "Página %d: " % pagina if varias_paginas else ""
-    avisos = []
+def _avisos_crudos_de_fila(row):
+    """Avisos de una página, en minúscula y sin prefijo: la tarjeta los agrupa."""
     if not row.get("frame_found", True):
-        avisos.append("no encontré el marco del rótulo: usé el área con tinta, "
-                      "que puede traer marcas sueltas de la hoja. Revisá el resultado.")
-    elif (row.get("mismatch", 0.0) or 0.0) > engine.ASPECT_TOLERANCE:
-        avisos.append("el rótulo original no es bien 10 × 15: quedó centrado y con "
-                      "blanco a los lados. Pedilo en 10 × 15.")
-    return _con_prefijo(avisos, prefijo)
+        return ["no encontré el marco del rótulo: usé el área con tinta, "
+                "que puede traer marcas sueltas de la hoja. Revisá el resultado."]
+    if (row.get("mismatch", 0.0) or 0.0) > engine.ASPECT_TOLERANCE:
+        return ["el rótulo original no es bien 10 × 15: quedó centrado y con "
+                "blanco a los lados. Pedilo en 10 × 15."]
+    return []
+
+
+def _infos_crudas_de_fila(row, varias_paginas):
+    """Información neutra de una página, en minúscula y sin prefijo.
+
+    Con varias páginas el recorte dice cuántos milímetros de aire sacó: si no,
+    cada página repetiría la misma frase y el número quedaría invisible.
+    """
+    milimetros = row.get("trimmed_mm", 0.0) or 0.0
+    if milimetros <= 0:
+        return []
+    if varias_paginas:
+        return ["recorté %s mm de aire al final para que el rótulo entre más grande."
+                % _numero_corto(milimetros)]
+    return ["recorté el aire que sobraba abajo para que el rótulo entre más grande."]
 
 
 def _con_prefijo(lineas, prefijo):
@@ -295,28 +308,77 @@ def _con_prefijo(lineas, prefijo):
     return [linea[0].upper() + linea[1:] for linea in lineas]
 
 
-def _infos_de_fila(row, pagina, varias_paginas):
-    """Información neutra de una página: cuenta lo que se hizo, no pide nada."""
-    prefijo = "Página %d: " % pagina if varias_paginas else ""
-    infos = []
-    if (row.get("trimmed_mm", 0.0) or 0.0) > 0:
-        infos.append("recorté el aire que sobraba abajo para que el rótulo entre más grande.")
-    return _con_prefijo(infos, prefijo)
+def _tramos_de_paginas(paginas):
+    """[1, 2, 3, 5] -> [[1, 3], [5, 5]]: los números contiguos se juntan."""
+    tramos = []
+    for pagina in sorted(set(paginas)):
+        if tramos and pagina == tramos[-1][1] + 1:
+            tramos[-1][1] = pagina
+        else:
+            tramos.append([pagina, pagina])
+    return tramos
+
+
+def _prefijo_de_paginas(paginas):
+    """«Página 4: » o «Páginas 2-3: », con los tramos que hagan falta."""
+    tramos = [("%d-%d" % (desde, hasta)) if desde != hasta else "%d" % desde
+              for desde, hasta in _tramos_de_paginas(paginas)]
+    rango = tramos[0] if len(tramos) == 1 else ", ".join(tramos[:-1]) + " y " + tramos[-1]
+    if len(set(paginas)) == 1:
+        return "Página %s: " % rango
+    return "Páginas %s: " % rango
+
+
+def _agrupar_por_paginas(rows, textos_de_fila):
+    """[(texto, [páginas])] en orden de aparición; textos idénticos se juntan."""
+    grupos = []
+    indice = {}
+    for row in rows:
+        pagina = row.get("page", 1)
+        for texto in textos_de_fila(row):
+            paginas = indice.get(texto)
+            if paginas is None:
+                paginas = []
+                indice[texto] = paginas
+                grupos.append((texto, paginas))
+            if pagina not in paginas:
+                paginas.append(pagina)
+    return grupos
+
+
+def _lineas_por_concepto(rows, textos_de_fila):
+    """Una línea por concepto: sin prefijo si vale para todas las páginas.
+
+    Repetir el mismo aviso siete veces porque cambia el número de página es una
+    pared de texto: el número sólo aparece cuando el aviso no es de todas.
+    """
+    varias = len(rows) > 1
+    todas = set(row.get("page", 1) for row in rows)
+    lineas = []
+    for texto, paginas in _agrupar_por_paginas(rows, textos_de_fila):
+        if varias and set(paginas) != todas:
+            lineas.append(_prefijo_de_paginas(paginas) + texto)
+        else:
+            lineas.append(texto[0].upper() + texto[1:])
+    return lineas
+
+
+def _resumen_lineas(rows):
+    """Resumen de la tarjeta: una línea si todas las páginas dicen lo mismo.
+
+    Con más de una página la línea arranca con el total, que es el dato que el
+    usuario necesita para saber que convirtió todo.
+    """
+    if len(rows) > 1 and len(set(row_summary_line(row) for row in rows)) == 1:
+        return ["%d páginas · %s" % (len(rows), row_summary_line(rows[0]))]
+    return _lineas_por_concepto(rows, lambda row: [row_summary_line(row)])
 
 
 def result_warning_lines(result):
     """Avisos de la tarjeta: lo que el usuario tiene que revisar. En ámbar o rojo."""
     if result.get("error"):
         return ["No se pudo convertir. Abrí «Ver detalle técnico» para saber por qué."]
-
-    rows = result.get("rows") or []
-    varias = len(rows) > 1
-    lineas = []
-    for row in rows:
-        for aviso in _avisos_de_fila(row, row.get("page", 1), varias):
-            if aviso not in lineas:
-                lineas.append(aviso)
-    return lineas
+    return _lineas_por_concepto(result.get("rows") or [], _avisos_crudos_de_fila)
 
 
 def result_info_lines(result):
@@ -329,12 +391,7 @@ def result_info_lines(result):
         return []
     rows = result.get("rows") or []
     varias = len(rows) > 1
-    lineas = []
-    for row in rows:
-        for info in _infos_de_fila(row, row.get("page", 1), varias):
-            if info not in lineas:
-                lineas.append(info)
-    return lineas
+    return _lineas_por_concepto(rows, lambda row: _infos_crudas_de_fila(row, varias))
 
 
 def card_status(result):
@@ -354,13 +411,16 @@ def card_lines(result):
     ('info' es información neutra, sin barra de aviso); 'revisar' va en ámbar o
     en rojo. 'estado' marca la única línea que estrena la palabra del estado
     («Listo», «Revisá», «Error»), que es la segunda línea de la tarjeta.
+
+    Cada concepto ocupa como mucho una línea: las páginas que dicen lo mismo
+    se agrupan en vez de repetir el mismo texto página por página.
     """
     estado = card_status(result)
     lineas = []
     estrena = True
     if not result.get("error"):
-        for row in result.get("rows") or []:
-            lineas.append({"texto": row_summary_line(row), "clase": "resumen",
+        for resumen in _resumen_lineas(result.get("rows") or []):
+            lineas.append({"texto": resumen, "clase": "resumen",
                            "estado": estrena})
             estrena = False
     for aviso in result_warning_lines(result):
