@@ -60,9 +60,9 @@ deformar y avisa cuando el rótulo de origen no tiene forma 10 × 15.
 No hace: no estira para llenar la etiqueta, no borra contenido, no imprime solo y
 **no garantiza que el código escanee en todos los lectores**.
 
-Si el recorte encuentra una imagen o un dibujo ancho que no puede ver, **no
-recorta** y muestra un aviso: en ese caso abrí el PDF convertido y miralo antes de
-imprimir.
+El recorte no puede borrar contenido: el borde del marco se excluye y cuentan el
+texto, los dibujos internos y las imágenes. La línea de corte es el fondo del
+contenido más 2 mm de margen, y sólo recorta si el aire al final llega a 5 mm.
 
 ## Si algo falla
 

@@ -8,6 +8,33 @@ Todos los cambios que se notan desde afuera se anotan acá. El formato sigue
 
 Nada todavía.
 
+## [1.0.1] - 2026-10-27
+
+Actualización recomendada: la 1.0.0 entrega la etiqueta más chica de lo que debe.
+
+### Corregido
+
+- **El recorte del espacio muerto ya no se bloquea por el borde del propio marco.**
+  El borde contaba como contenido, así que la línea de corte quedaba pegada al
+  fondo del marco y el rótulo no se recortaba nunca. Ahora el borde se excluye y
+  **la etiqueta vuelve a salir a 89,1 × 150,0 mm en vez de 79,1 mm**, con los
+  códigos de barras más grandes y legibles.
+- **Los documentos describen la regla real** del recorte: qué cuenta como
+  contenido (texto, dibujos internos e imágenes, sin el borde del marco), la línea
+  de corte a 2 mm del contenido y el mínimo de 5 mm de aire para recortar. Se
+  sacaron las menciones al aviso que ya no existe.
+
+### Cambiado
+
+- **Ventana rediseñada con la identidad de Ardamir**: isotipo, paleta navy, dorado
+  y crema, y jerarquía visual nueva.
+- **Los resultados se muestran como tarjetas** con el estado en palabras
+  (**Listo** / **Revisá** / **Error**), en lugar de una grilla de columnas.
+- **Bloque «Cómo se usa»** visible mientras no hay resultados, para que la
+  primera vez no haya que adivinar el paso siguiente.
+- **El detalle técnico quedó oculto detrás de un enlace**: la superficie principal
+  habla en castellano llano y las medidas finas aparecen sólo si las pedís.
+
 ## [1.0.0] - 2026-10-27
 
 Primera versión publicable, con código fuente y con ejecutable de Windows.
@@ -54,5 +81,6 @@ Primera versión publicable, con código fuente y con ejecutable de Windows.
 - La app no imprime: genera el PDF y lo abre. La impresión la hacés vos, con papel
   de 100 × 150 mm y escala "Tamaño real".
 
-[Sin publicar]: https://github.com/arespaqui/etiquetas-10x15/compare/v1.0.0...HEAD
+[Sin publicar]: https://github.com/arespaqui/etiquetas-10x15/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/arespaqui/etiquetas-10x15/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/arespaqui/etiquetas-10x15/releases/tag/v1.0.0

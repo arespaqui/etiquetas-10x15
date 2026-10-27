@@ -49,8 +49,7 @@ de programación**: si sabés elegir un archivo y hacer doble clic, lo podés us
   hay, dejando 2 mm de margen (ver [más abajo](#qué-hace-con-el-espacio-en-blanco-del-final)).
 - **Escala sin deformar**: lo mismo en ancho y en alto. Nunca estira para llenar.
 - Convierte **varios PDFs de una vez** y **todas las páginas** de cada PDF.
-- **Avisa antes de imprimir** cuando el rótulo de origen no tiene forma 10 × 15 o
-  cuando no pudo recortar con seguridad.
+- **Avisa antes de imprimir** cuando el rótulo de origen no tiene forma 10 × 15.
 - **No falla en silencio**: si algo sale mal, lo dice en la ventana y lo anota en
   `errores.log`.
 
@@ -223,13 +222,12 @@ se ganaron. Gracias a eso el mismo contenido entra más grande. Si no había nad
 que recortar, el renglón no aparece: no es un error, es que no hacía falta.
 
 **El renglón naranja que empieza con `!`.** Es un aviso: algo que tenés que saber
-**antes** de imprimir. Los tres avisos posibles son:
+**antes** de imprimir. Los dos avisos posibles son:
 
 | Aviso (empieza con `!`) | Qué significa |
 |---|---|
 | *El rótulo de origen no tiene forma 10×15: quedó con N mm de blanco a cada lado…* | El rótulo original tiene otra proporción. El resultado entra igual y los códigos no se deforman, pero queda blanco a los costados y la escala no es la máxima posible. Se arregla pidiendo el rótulo en formato 10 × 15 a quien te lo genera. |
 | *No encontré el marco del rótulo en esta página: usé el área con tinta…* | El PDF no tiene el marco dibujado (o no se pudo validar). El programa usó todo lo que tiene tinta, que puede incluir marcas sueltas de la hoja. **Revisá el resultado antes de imprimir.** |
-| *No se recorta el espacio muerto porque hay contenido (…) fuera del área calculada…* | El recorte encontró una imagen o un dibujo ancho que no puede ver del todo y, antes que borrarlo, dejó el espacio como estaba. **Revisá el resultado antes de imprimir.** |
 
 **El renglón de estado**, abajo del botón verde, resume el lote en una frase:
 
@@ -258,11 +256,10 @@ Por eso, antes de escalar, el programa hace tres cosas:
    puede salir cortado. Los 2 mm son la razón por la que el contenido no toca el
    borde aunque parezca que sobra lugar.
 
-**El recorte es conservador a propósito.** El programa sólo ve texto y dibujos; si
-encuentra una **imagen** o un **dibujo ancho** que quedaría afuera del área
-calculada, **no recorta nada** y muestra el aviso naranja. Prefiere una etiqueta
-un poco más chica antes que una etiqueta con un logo borrado. Si ves ese aviso,
-abrí el PDF convertido, revisá que esté todo y recién ahí imprimí.
+**El recorte no puede borrar contenido.** Antes de cortar, el programa arma el contenido
+real: **excluye el borde del marco** y conserva el texto, los dibujos internos y las imágenes.
+La línea de corte es el fondo de ese contenido más 2 mm de margen, así que nada real queda
+fuera. Si el aire al final no llega a 5 mm, no recorta: deja el rótulo como estaba.
 
 **El recorte es sólo del final.** No recorta a los costados ni arriba. Si el
 rótulo original es ancho y la etiqueta queda con blanco a los costados, eso es la
@@ -339,7 +336,7 @@ conviene imprimir es un contenido que se sale de la página.
 | La etiqueta sale **corrida, chica o recortada** | La escala de impresión no es *Tamaño real*, o el driver no tiene el papel de 100 × 150 mm | Papel `100x150`, escala **`Tamaño real`**, 1 página por hoja, sin rotación |
 | **El código no escanea** en el lector | Escala de impresión, contraste, calidad del origen o el propio lector | Imprimí en *Tamaño real*; compará con el PDF original (si ahí ya no leía, el problema no es la conversión); revisá el contraste; mirá el aviso de proporción; probá con otro lector |
 | El resultado tiene **mucho blanco a los costados** | El rótulo de origen no tiene proporción 10 × 15 y el programa no estira | Es a propósito: estirar deforma los códigos. Pedí el rótulo en formato 10 × 15 a quien te lo genera |
-| Aparece **"no se recorta el espacio muerto…"** | Hay una imagen o un dibujo ancho fuera del área calculada y recortar lo borraría | Es la guarda conservadora. Abrí el PDF convertido, revisá que esté todo y después imprimí |
+| Aparece **"Recorté el aire que sobraba abajo…"** | Es información: había 5 mm o más de blanco al final y el programa lo sacó para que el rótulo entre más grande, dejando 2 mm de margen | No hay nada que revisar: es lo esperable. Abrí el PDF convertido y mirá que esté todo antes de imprimir |
 | Aparece **"No encontré el marco del rótulo…"** | El PDF no tiene el marco vectorial del rótulo | Se usó el área con tinta, que puede incluir marcas sueltas. Revisá el resultado antes de imprimir |
 | **El PDF original cambió o desapareció** | No debería pasar: el programa siempre escribe un archivo nuevo | Buscá el `<nombre>_10x15.pdf` al lado del original. Si el nombre ya existía, el nuevo es `(2)`. El original no se toca nunca |
 | **Windows avisa "Windows protegió tu PC"** | El `.exe` no está firmado digitalmente | *Más información → Ejecutar de todas formas*. Es un binario nuevo, sin reputación; el código fuente está a la vista |

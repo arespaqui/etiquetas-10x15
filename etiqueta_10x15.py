@@ -44,6 +44,7 @@ MAX_FRAME_FRACTION = 0.70    # a frame covering most of the page is a trim borde
 MIN_TEXT_INSIDE = 0.50       # the frame must hold most of the text
 MIN_TRIM_MM = 5.0            # trim dead white space at the end when it is at least this tall
 EDGE_MARGIN_MM = 2.0         # keep content off the label edge: thermal printers clip the very edge
+BORDER_TOLERANCE_PT = 2.0    # a stroke this close to the frame rectangle IS the frame, not content
 
 MM = PT_PER_MM
 
@@ -163,21 +164,41 @@ def image_rects(page):
 
 
 def looks_like_frame_border(rect, frame):
-    """True when a stroke is the frame itself and not content drawn inside it."""
-    tolerance = 2.0 * MM
+    """True when a stroke is the frame outline itself and not content drawn inside it.
+
+    The test is purely geometric: the frame stroke lies ON the frame rectangle
+    and runs along it. A horizontal separator inside the label spans the frame
+    width too, but sits away from the top and bottom edges, so it stays content.
+
+    Counting the frame border as content was the bug that made every real label
+    trim zero: the border bottom row became the content bottom row.
+    """
     spans_width = rect.width >= frame.width * 0.9
     spans_height = rect.height >= frame.height * 0.9
-    if spans_width and spans_height:
+
+    near_top = (
+        abs(rect.y0 - frame.y0) <= BORDER_TOLERANCE_PT
+        or abs(rect.y1 - frame.y0) <= BORDER_TOLERANCE_PT
+    )
+    near_bottom = (
+        abs(rect.y1 - frame.y1) <= BORDER_TOLERANCE_PT
+        or abs(rect.y0 - frame.y1) <= BORDER_TOLERANCE_PT
+    )
+    near_left = (
+        abs(rect.x0 - frame.x0) <= BORDER_TOLERANCE_PT
+        or abs(rect.x1 - frame.x0) <= BORDER_TOLERANCE_PT
+    )
+    near_right = (
+        abs(rect.x1 - frame.x1) <= BORDER_TOLERANCE_PT
+        or abs(rect.x0 - frame.x1) <= BORDER_TOLERANCE_PT
+    )
+
+    if spans_width and (near_top or near_bottom):
         return True
-    if spans_width and abs(rect.y1 - frame.y1) <= tolerance:
+    if spans_height and (near_left or near_right):
         return True
-    if spans_width and abs(rect.y0 - frame.y0) <= tolerance:
-        return True
-    if spans_height and abs(rect.x0 - frame.x0) <= tolerance:
-        return True
-    if spans_height and abs(rect.x1 - frame.x1) <= tolerance:
-        return True
-    return False
+    # the whole frame drawn as a single rectangle path
+    return spans_width and spans_height
 
 
 def content_inside(page, frame):
@@ -187,12 +208,13 @@ def content_inside(page, frame):
     frame into the stock then shrinks everything for nothing: trimming that air
     first makes the printed label bigger without touching any content.
 
-    Returns ``(box, blocked)``:
-      box     -- fitz.Rect spanning the frame width between the first and the last
-                 content row, or None when nothing inside the frame is content.
-      blocked -- Spanish reason when content inside the frame escapes that box
-                 (a raster image, a wide stroke below the text). Cutting there
-                 would delete it, so the caller must not trim.
+    The content is the union of the text blocks, the drawings that are not the
+    frame border and the raster images inside the frame. Nothing else can be
+    lost by cutting at the bottom of that union, so no conservative veto is
+    needed -- a veto is what used to shrink real labels by 14%.
+
+    Returns a fitz.Rect spanning the frame width between the first and the last
+    content row, or None when nothing inside the frame is content.
     """
     inner = fitz.Rect(frame.x0 + 1, frame.y0 + 1, frame.x1 - 1, frame.y1 - 1)
 
@@ -200,38 +222,23 @@ def content_inside(page, frame):
         centre = fitz.Point((rect.x0 + rect.x1) / 2.0, (rect.y0 + rect.y1) / 2.0)
         return inner.contains(centre)
 
-    # Geometry the trim already trusted: text blocks and strokes drawn inside.
-    trusted = [fitz.Rect(block[:4]) for block in page.get_text("blocks") or []]
-    # Geometry it could not see, and that must never be cut in silence.
-    blind = []
+    rects = [fitz.Rect(block[:4]) for block in page.get_text("blocks") or []]
 
     for drawing in page.get_drawings():
         rect = fitz.Rect(drawing["rect"])
-        # full-frame lines are the border itself, not content
-        if rect.height >= frame.height * 0.9 or rect.width >= frame.width * 0.9:
-            if not looks_like_frame_border(rect, frame):
-                blind.append(("un dibujo ancho", rect))
+        if looks_like_frame_border(rect, frame):
             continue
-        trusted.append(rect)
+        rects.append(rect)
 
-    for rect in image_rects(page):
-        blind.append(("una imagen", rect))
+    rects.extend(image_rects(page))
 
-    trusted = [rect for rect in trusted if inside(rect)]
-    if not trusted:
-        return None, None
+    rects = [rect for rect in rects if inside(rect)]
+    if not rects:
+        return None
 
-    top = min(rect.y0 for rect in trusted)
-    bottom = max(rect.y1 for rect in trusted)
-    box = fitz.Rect(frame.x0, top, frame.x1, bottom)
-
-    for kind, rect in blind:
-        if not inside(rect):
-            continue
-        if rect.y0 < top - PAD_PT or rect.y1 > bottom + PAD_PT:
-            return box, kind
-
-    return box, None
+    top = min(rect.y0 for rect in rects)
+    bottom = max(rect.y1 for rect in rects)
+    return fitz.Rect(frame.x0, top, frame.x1, bottom)
 
 
 def describe(rect, label="area"):
@@ -266,18 +273,12 @@ def convert(src_path, out_path, trim_dead_space=True):
 
         trimmed_mm = 0.0
         if trim_dead_space:
-            content, blocked = content_inside(page, box)
+            content = content_inside(page, box)
             if content is not None:
                 dead = (box.y1 - content.y1) / MM
-                if dead >= MIN_TRIM_MM and blocked:
-                    # Conservative: content (an image, above all) lives below the
-                    # box the trim can see, so the air stays and the operator is told.
-                    warnings.append(
-                        "página %d: no se recorta el espacio muerto porque hay contenido "
-                        "(%s) fuera del área calculada y el recorte lo perdería. "
-                        "Revisá el resultado antes de imprimir." % (pno + 1, blocked)
-                    )
-                elif dead >= MIN_TRIM_MM:
+                if dead >= MIN_TRIM_MM:
+                    # Nothing real can be lost: the cut line is the bottom of the
+                    # content, images and inner separators included.
                     margin = EDGE_MARGIN_MM * MM   # mm -> points
                     top = max(box.y0, min(box.y0, content.y0) - margin)
                     bottom = min(box.y1, content.y1 + margin)

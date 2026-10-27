@@ -125,6 +125,8 @@ try {
         "--add-data", "$repo\LEEME.md;.",
         "--add-data", "$repo\LICENSE;.",
         "--add-data", "$repo\NOTICE;.",
+        # El isotipo de Ardamir que muestra la ventana. Si falta, la app degrada a texto.
+        "--add-data", "$repo\docs\marca\marca.png;docs\marca",
         "--paths", $repo,
         "--exclude-module", "pymupdf.layout",
         "--exclude-module", "onnxruntime",

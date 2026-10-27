@@ -29,55 +29,134 @@ def hash_of(path):
     return digest.hexdigest()
 
 
-class ContenidoFueraDelAreaCalculadaTest(unittest.TestCase):
-    """S5: si hay contenido (imágenes incluidas) fuera del área calculada, no recorta y avisa."""
+class ImagenEnLaZonaBajaTest(unittest.TestCase):
+    """S5: la imagen del pie del rótulo cuenta como contenido y sobrevive al recorte.
 
-    def test_imagen_en_el_espacio_muerto_no_se_recorta(self):
-        """Una imagen al pie del marco no puede desaparecer con el recorte."""
+    El requisito es que la imagen se imprima, no que se deje de recortar: la
+    salida con imagen queda más chica que la salida sin imagen, y eso es correcto.
+    """
+
+    def test_la_imagen_de_la_zona_baja_sobrevive_al_recorte(self):
+        """La imagen del pie se imprime completa y el corte nunca queda por encima de ella."""
         with tempfile.TemporaryDirectory() as carpeta:
-            origen = os.path.join(carpeta, "rotulo con imagen.pdf")
+            # 1) rótulo con una imagen raster en la zona baja del marco
+            con_imagen = os.path.join(carpeta, "rotulo con imagen.pdf")
             doc, page = soporte.blank_page()
-            # marco de 86 x 163 mm: el alto exacto de la etiqueta, con el aire al final
             soporte.add_frame(page, x_mm=20, y_mm=20, w_mm=FRAME_W_MM, h_mm=FRAME_H_MM)
             soporte.add_text_lines(page, x_mm=24, first_baseline_mm=32, count=2, step_mm=9)
-            # imagen raster chica en la zona muerta: el marco termina en y = 183 mm
-            soporte.add_dark_image(page, x_mm=30, y_mm=163, w_mm=20, h_mm=15)
-            soporte.save(doc, origen)
-            destino = os.path.join(carpeta, "rotulo con imagen_10x15.pdf")
+            # la imagen vive entre y = 163 y 176 mm; el marco termina en y = 183 mm
+            rect_imagen = soporte.add_dark_image(page, x_mm=30, y_mm=163, w_mm=20, h_mm=13)
+            soporte.save(doc, con_imagen)
 
-            rows, warnings = etiqueta.convert(origen, destino)
+            # 2) rótulo gemelo sin la imagen: sirve para comparar tamaños
+            sin_imagen = os.path.join(carpeta, "rotulo sin imagen.pdf")
+            doc, page = soporte.blank_page()
+            soporte.add_frame(page, x_mm=20, y_mm=20, w_mm=FRAME_W_MM, h_mm=FRAME_H_MM)
+            soporte.add_text_lines(page, x_mm=24, first_baseline_mm=32, count=2, step_mm=9)
+            soporte.save(doc, sin_imagen)
 
-            self.assertTrue(rows[0]["frame_found"], "no se detectó el marco del rótulo")
-            self.assertEqual(
+            destino_imagen = os.path.join(carpeta, "rotulo con imagen_10x15.pdf")
+            destino_texto = os.path.join(carpeta, "rotulo sin imagen_10x15.pdf")
+            filas_imagen, avisos_imagen = etiqueta.convert(con_imagen, destino_imagen)
+            filas_texto, _ = etiqueta.convert(sin_imagen, destino_texto)
+
+            fila = filas_imagen[0]
+            self.assertTrue(fila["frame_found"], "no se detectó el marco del rótulo")
+
+            # el corte se mide contra el fondo de la imagen, no contra el del texto
+            fondo_imagen_mm = soporte.pts_to_mm(rect_imagen.y1)
+            aire_bajo_la_imagen_mm = (20.0 + FRAME_H_MM) - fondo_imagen_mm
+            self.assertGreater(
+                fila["trimmed_mm"],
                 0.0,
-                rows[0]["trimmed_mm"],
-                "recortó espacio muerto con una imagen adentro: la imagen se pierde",
+                "no recortó nada: la etiqueta sale más chica de lo necesario (aire %.1f mm)"
+                % aire_bajo_la_imagen_mm,
             )
-            self.assertTrue(
-                any("no se recorta" in aviso for aviso in warnings),
-                "no avisó que no recorta: %r" % (warnings,),
+            self.assertLessEqual(
+                fila["trimmed_mm"],
+                aire_bajo_la_imagen_mm + 0.5,
+                "el corte (%.1f mm) quedó por encima del fondo de la imagen (%.1f mm)"
+                % (fila["trimmed_mm"], fondo_imagen_mm),
+            )
+            self.assertFalse(
+                any("espacio muerto" in aviso for aviso in avisos_imagen),
+                "volvió la guarda que se niega a recortar: %r" % (avisos_imagen,),
             )
 
-            salida = fitz.open(destino)
+            salida = fitz.open(destino_imagen)
             try:
                 self.assertEqual(1, salida.page_count)
                 ancho_mm, alto_mm = soporte.page_size_mm(salida[0])
                 self.assertAlmostEqual(100.0, ancho_mm, delta=0.2)
                 self.assertAlmostEqual(150.0, alto_mm, delta=0.2)
 
+                # Dónde tiene que quedar la tinta de la imagen: se mide en el origen
+                # (por debajo de y = 150 mm sólo hay imagen) y se proyecta con la
+                # escala y el margen que informó la conversión.
+                origen_doc = fitz.open(con_imagen)
+                try:
+                    tinta_origen = soporte.ink_box_in_band_mm(origen_doc[0], 150.0, 195.0)
+                finally:
+                    origen_doc.close()
+                self.assertIsNotNone(tinta_origen, "la imagen no se dibujó en el PDF de origen")
+                escala = fila["scale"] / 100.0
+                base_x_mm, base_y_mm = 20.0, 20.0   # esquina del marco en este fixture
+                esperado = fitz.Rect(
+                    fila["margin_x"] + (tinta_origen.x0 - base_x_mm) * escala,
+                    fila["margin_y"] + (tinta_origen.y0 - base_y_mm) * escala,
+                    fila["margin_x"] + (tinta_origen.x1 - base_x_mm) * escala,
+                    fila["margin_y"] + (tinta_origen.y1 - base_y_mm) * escala,
+                )
+
                 tinta = soporte.ink_box_mm(salida[0])
                 self.assertIsNotNone(tinta, "la etiqueta salió en blanco")
-                self.assertGreaterEqual(
+                self.assertAlmostEqual(
+                    esperado.y1,
                     tinta.y1,
-                    128.0,
-                    "la imagen del pie del marco no llegó a la etiqueta (tinta hasta %.1f mm)"
-                    % tinta.y1,
+                    delta=1.5,
+                    msg="la imagen del pie no se imprimió completa: la tinta llega a %.1f mm "
+                    "y la imagen debería llegar a %.1f mm" % (tinta.y1, esperado.y1),
                 )
                 self.assertLessEqual(
                     tinta.y1, 149.8, "la tinta se sale de la etiqueta: %.1f mm" % tinta.y1
                 )
+
+                # al pie de la etiqueta tiene que estar la imagen, y sólo la imagen
+                pie = soporte.ink_box_in_band_mm(salida[0], 100.0, 150.0)
+                self.assertIsNotNone(pie, "no quedó nada de la imagen en el pie de la etiqueta")
+                self.assertAlmostEqual(
+                    esperado.y1, pie.y1, delta=1.5, msg="la imagen no llegó al pie de la etiqueta"
+                )
+                self.assertAlmostEqual(
+                    esperado.x0, pie.x0, delta=1.5, msg="la imagen se movió a la izquierda"
+                )
+                self.assertAlmostEqual(
+                    esperado.x1,
+                    pie.x1,
+                    delta=1.5,
+                    msg="la imagen se movió a la derecha o se cortó: %.1f mm" % pie.x1,
+                )
+                self.assertLess(
+                    pie.width, 50.0, "debe haber imagen al pie, no contenido de lado a lado"
+                )
             finally:
                 salida.close()
+
+            # con imagen la etiqueta queda más chica: es lo esperado y no es un error
+            self.assertGreater(
+                filas_texto[0]["scale"],
+                fila["scale"],
+                "la salida con imagen no es más chica que la salida sin imagen",
+            )
+
+            salida_texto = fitz.open(destino_texto)
+            try:
+                self.assertIsNone(
+                    soporte.ink_box_in_band_mm(salida_texto[0], 100.0, 150.0),
+                    "la prueba sin imagen tiene contenido al pie: la comparación no sirve",
+                )
+            finally:
+                salida_texto.close()
 
 
 class RecorteSinImagenesTest(unittest.TestCase):
@@ -104,8 +183,8 @@ class RecorteSinImagenesTest(unittest.TestCase):
             )
             self.assertLessEqual(rows[0]["trimmed_mm"], 27.0, "recortó de más")
             self.assertFalse(
-                any("no se recorta" in aviso for aviso in warnings),
-                "avisó que no recorta cuando no había nada escondido: %r" % (warnings,),
+                any("espacio muerto" in aviso for aviso in warnings),
+                "volvió la guarda que se niega a recortar: %r" % (warnings,),
             )
 
             salida = fitz.open(destino)
@@ -252,10 +331,14 @@ class SinMarcoDetectableTest(unittest.TestCase):
                 salida.close()
 
 
-class DibujoAnchoFueraDelAreaTest(unittest.TestCase):
-    """S5 (triangulación): un dibujo ancho debajo del texto tampoco se recorta."""
+class SeparadorAnchoDebajoDelTextoTest(unittest.TestCase):
+    """S5 (triangulación): un separador interno de ancho completo es contenido, no borde.
 
-    def test_dibujo_ancho_debajo_del_texto_frena_el_recorte(self):
+    El separador no está pegado a los bordes del marco, así que no es el marco:
+    cuenta como contenido y el recorte lo respeta, sin bloquear nada.
+    """
+
+    def test_separador_ancho_debajo_del_texto_cuenta_como_contenido(self):
         with tempfile.TemporaryDirectory() as carpeta:
             origen = os.path.join(carpeta, "rotulo con linea ancha.pdf")
             doc, page = soporte.blank_page()
@@ -268,15 +351,96 @@ class DibujoAnchoFueraDelAreaTest(unittest.TestCase):
 
             rows, warnings = etiqueta.convert(origen, destino)
 
-            self.assertEqual(
-                0.0,
+            # el marco termina en y = 183 mm y el separador en 168 mm
+            self.assertGreaterEqual(
                 rows[0]["trimmed_mm"],
-                "recortó una línea ancha que estaba debajo del texto",
+                12.0,
+                "el separador ancho bloqueó el recorte en vez de contar como contenido",
             )
-            self.assertTrue(
-                any("no se recorta" in aviso for aviso in warnings),
-                "no avisó que no recorta por el dibujo ancho: %r" % (warnings,),
+            self.assertLessEqual(
+                rows[0]["trimmed_mm"],
+                15.5,
+                "el corte pasó por encima del separador (%.1f mm)" % rows[0]["trimmed_mm"],
             )
+            self.assertFalse(
+                any("espacio muerto" in aviso for aviso in warnings),
+                "volvió la guarda que se niega a recortar: %r" % (warnings,),
+            )
+
+            salida = fitz.open(destino)
+            try:
+                tinta = soporte.ink_box_mm(salida[0])
+                self.assertIsNotNone(tinta, "la etiqueta salió en blanco")
+                self.assertGreaterEqual(
+                    tinta.y1, 145.0, "el separador del pie no llegó a la etiqueta"
+                )
+                self.assertGreater(
+                    tinta.width, 80.0, "el separador se imprimió más angosto de lo que es"
+                )
+            finally:
+                salida.close()
+
+
+class RotuloTipoCorreoTest(unittest.TestCase):
+    """Regresión de producción: un rótulo como el real tiene que recortar su aire.
+
+    Geometría medida en el PDF real: página A4 horizontal, marco de 86 x 163 mm,
+    el contenido termina ~20 mm por encima del borde inferior del marco y hay un
+    separador horizontal de ancho completo dentro del contenido. Antes del
+    arreglo la guarda conservadora se negaba a recortar y la etiqueta salía
+    79.1 x 150.0 mm (14 % más chica) en vez de ~90 x 150 mm.
+    """
+
+    def test_rotulo_tipo_correo_recorta_el_aire_del_pie(self):
+        with tempfile.TemporaryDirectory() as carpeta:
+            origen = os.path.join(carpeta, "rotulo correo.pdf")
+            doc, page = soporte.blank_page(width_mm=297.0, height_mm=210.0)
+            soporte.add_frame(page, x_mm=20, y_mm=21, w_mm=FRAME_W_MM, h_mm=FRAME_H_MM)
+            page.insert_text((soporte.mm(24), soporte.mm(30)), "Correo Argentino")
+            soporte.add_text_lines(page, x_mm=24, first_baseline_mm=46, count=12, step_mm=9)
+            # separador de ancho completo al pie del contenido: y = 163.8 mm,
+            # a 20.2 mm del borde inferior del marco (y = 184 mm)
+            soporte.add_wide_rule(page, x_mm=20, y_mm=163.8, w_mm=FRAME_W_MM)
+            soporte.save(doc, origen)
+            destino = os.path.join(carpeta, "rotulo correo_10x15.pdf")
+
+            rows, warnings = etiqueta.convert(origen, destino)
+
+            fila = rows[0]
+            self.assertTrue(fila["frame_found"], "no se detectó el marco del rótulo")
+            self.assertGreaterEqual(
+                fila["trimmed_mm"],
+                15.0,
+                "no recortó el aire del pie: la etiqueta sale chica de más ("
+                "recorte %.1f mm)" % fila["trimmed_mm"],
+            )
+            self.assertFalse(
+                any("espacio muerto" in aviso for aviso in warnings),
+                "volvió la guarda que se niega a recortar: %r" % (warnings,),
+            )
+
+            salida = fitz.open(destino)
+            try:
+                self.assertEqual(1, salida.page_count)
+                ancho_mm, alto_mm = soporte.page_size_mm(salida[0])
+                self.assertAlmostEqual(100.0, ancho_mm, delta=0.01)
+                self.assertAlmostEqual(150.0, alto_mm, delta=0.01)
+
+                tinta = soporte.ink_box_mm(salida[0])
+                self.assertIsNotNone(tinta, "la etiqueta salió en blanco")
+                self.assertGreater(
+                    tinta.width,
+                    88.0,
+                    "el contenido impreso mide %.1f mm de ancho: la etiqueta salió "
+                    "más angosta que el marco" % tinta.width,
+                )
+                self.assertLessEqual(tinta.width, 99.8, "el contenido se sale de la etiqueta")
+                self.assertGreaterEqual(
+                    tinta.y1, 146.0, "el separador del pie no llegó al pie de la etiqueta"
+                )
+                self.assertLessEqual(tinta.y1, 149.8, "el contenido se sale de la etiqueta")
+            finally:
+                salida.close()
 
 
 class ImagenDentroDelAreaTest(unittest.TestCase):
@@ -301,8 +465,8 @@ class ImagenDentroDelAreaTest(unittest.TestCase):
                 "una imagen dentro del área calculada frenó un recorte que era seguro",
             )
             self.assertFalse(
-                any("no se recorta" in aviso for aviso in warnings),
-                "avisó de un contenido escondido que no existe: %r" % (warnings,),
+                any("espacio muerto" in aviso for aviso in warnings),
+                "volvió la guarda que se niega a recortar: %r" % (warnings,),
             )
 
 

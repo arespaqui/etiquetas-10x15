@@ -123,6 +123,27 @@ def ink_box_mm(page, dpi=100):
     )
 
 
+def ink_box_in_band_mm(page, y0_mm, y1_mm, dpi=100):
+    """Caja de la tinta visible dentro de una franja horizontal (mm). None si no hay.
+
+    Sirve para preguntar por un contenido puntual del rótulo (por ejemplo la
+    imagen del pie) sin que el texto de arriba contamine la medición.
+    """
+    pix = _render(page, dpi)
+    escala = 25.4 / dpi
+    primera = max(0, int(y0_mm / escala))
+    ultima = min(pix.height - 1, int(y1_mm / escala))
+    rows = [y for y in _ink_rows(pix) if primera <= y <= ultima]
+    if not rows:
+        return None
+    x0, x1 = _ink_columns(pix, rows)
+    if x0 is None:
+        return None
+    return fitz.Rect(
+        x0 * escala, rows[0] * escala, (x1 + 1) * escala, (rows[-1] + 1) * escala
+    )
+
+
 def ink_bands_mm(page, dpi=100):
     """Franjas horizontales de tinta separadas por blanco: una por línea de texto."""
     pix = _render(page, dpi)

@@ -49,9 +49,10 @@ En detalle:
   aire se saca antes de escalar y la ventana avisa cuánto recortó.
 - **Deja 2 mm de margen arriba y abajo del contenido**, para que la impresora térmica no se coma
   el borde de las letras al cortar el filo de la etiqueta.
-- **No recorta cuando hay contenido que no puede ver.** Si encuentra una imagen o un dibujo ancho
-  fuera del área calculada, recortar ahí lo borraría: deja el espacio como está y **avisa en
-  pantalla** para que revises el PDF convertido antes de imprimir.
+- **Sabe qué es contenido y qué no.** El borde del marco del rótulo no cuenta como contenido:
+  se excluye. Sí cuentan el texto, los dibujos internos y las imágenes, y la línea de corte es el
+  fondo del contenido más 2 mm de margen, así que el recorte no puede dejar nada afuera.
+- **Con menos de 5 mm de aire al final no recorta**: no vale la pena y deja el rótulo como está.
 - **No estira nunca.** La escala es la misma en ancho y en alto. Si el rótulo de origen no tiene
   forma 10 × 15, lo deja centrado a escala uniforme y avisa cuánto blanco va a quedar.
 - **Acepta varios PDFs a la vez** y PDFs de varias páginas: convierte todas las páginas.
@@ -200,14 +201,13 @@ merge arrastran basura fuera del rótulo —texto suelto, marcas de corte, motas
 infla cualquier medición ingenua. Si una página no tiene marco reconocible, la app cae al área
 con tinta **y lo avisa**.
 
-**2. El aire del final se recorta con una guarda conservadora.** La app calcula dónde empieza y
+**2. El aire del final se recorta sin perder contenido.** La app calcula dónde empieza y
 dónde termina el contenido real, y si el blanco del final llega a 5 mm lo descarta antes de
-escalar, dejando **2 mm de margen** entre el contenido y el borde de la etiqueta. Pero el recorte
-sólo actúa sobre lo que puede ver: texto y dibujos. Antes de cortar revisa también las imágenes
-y los dibujos anchos, y si alguno queda fuera del área calculada **no recorta nada** y muestra el
-aviso naranja "no se recorta el espacio muerto porque hay contenido (…) fuera del área calculada
-y el recorte lo perdería". Es preferible una etiqueta más chica que una etiqueta con un logo
-borrado.
+escalar, dejando **2 mm de margen** entre el contenido y el borde de la etiqueta. Para eso
+distingue el marco de lo que hay adentro: **el borde del marco se excluye**, y sí cuentan el
+texto, los dibujos internos y las imágenes. La línea de corte es el fondo del contenido más esos
+2 mm, así que nada real puede quedar afuera. Si el aire al final no llega a 5 mm, no recorta: no
+vale la pena.
 
 **3. La escala es siempre uniforme.** El rótulo se agranda o se achica lo mismo en ancho y en
 alto, y se centra en la página de 100 × 150 mm. Nunca se estira para llenar. Si la proporción de
@@ -236,10 +236,9 @@ La app no deforma nada, así que el problema suele estar antes o después de ell
 Es la escala de impresión o el tamaño de papel del driver. Papel `100x150`, escala `Tamaño real`,
 1 página por hoja.
 
-**Aparece "no se recorta el espacio muerto…".**
-Es la guarda conservadora: hay una imagen o un dibujo ancho que el recorte no puede ver. La app
-prefirió no cortar antes que borrar contenido. Abrí el PDF convertido, mirá que esté todo y
-después imprimí.
+**Aparece "Recorté el aire que sobraba abajo…".**
+Es información, no un aviso: la app sacó el blanco que sobraba al final para que el rótulo entre
+más grande y dejó 2 mm de margen. No hay nada que revisar.
 
 **Windows avisa "Windows protegió tu PC".**
 El `.exe` no está firmado. *Más información → Ejecutar de todas formas*. El

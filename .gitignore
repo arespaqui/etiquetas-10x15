@@ -21,6 +21,7 @@ build/
 
 # ZIP del paquete listo para publicar: se sube como asset del Release, no va al repo
 Etiquetas-10x15-1.0.0-win64.zip
+Etiquetas-10x15-1.0.1-win64.zip
 
 # Entornos virtuales
 .venv/
