@@ -114,14 +114,16 @@ dist\Etiquetas 10x15\
 El log queda **al lado** del `.exe`, no dentro de `_internal\`. Si
 `ETIQUETAS_10X15_LOG` tiene una ruta, el log va a esa ruta y no a `dist\`.
 
-Medición de la última corrida (Windows 11, Python 3.12.10):
+Medición de la última corrida (Windows 11, Python 3.12.10). Los tamaños y el hash del
+binario cambian en cada compilación: sirven para verificar una descarga puntual, no
+para comparar builds entre sí. Las versiones de las herramientas sí son fijas.
 
 | Dato | Valor |
 |---|---|
 | Ejecutable | `dist\Etiquetas 10x15\Etiquetas 10x15.exe` |
-| Tamaño del `.exe` | 4.621.382 bytes |
-| SHA-256 del `.exe` (esta corrida) | `cf0a33ab9d39caa3fa9965bc9c27aa9891c3eb2ef9fc3c2d0bc02fc7b26de4df` |
-| Tamaño de la carpeta | 81.162.537 bytes (77,4 MiB) en 967 archivos |
+| Tamaño del `.exe` | alrededor de 4,6 MB (varía unos cientos de bytes por corrida) |
+| SHA-256 del `.exe` | cambia en cada compilación; el `construir.ps1` lo imprime al terminar |
+| Tamaño de la carpeta | alrededor de 77,5 MiB en ~968 archivos |
 | `pymupdf` | 2.0 |
 | `pillow` | 12.2.0 |
 | `pyinstaller` | 6.22.3 |
